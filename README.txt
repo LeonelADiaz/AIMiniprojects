@@ -41,4 +41,10 @@ supply three mazes as shown above that you can use to test your program, but we 
 
 You should include in your report the name of the team members (you can work in pairs). Please
 describe the algorithms and data structures used that you used for the implementation of
-all four search strategies. Answer the following questions on your report: what is a state? What is a node? Are they the same or different in your implementations? What is the frontier? Do you maintain an explored states list? How are repeated states detected and managed?
+all four search strategies. Answer the following questions on your report:
+ what is a state? 
+ What is a node? 
+ Are they the same or different in your implementations?
+ What is the frontier?
+ Do you maintain an explored states list?
+ How are repeated states detected and managed?
