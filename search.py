@@ -1,5 +1,10 @@
-#Start search Solution here
+#Start search Solution here with imports
 import argparse
+import bisect
+import math
+import random
+import sys
+from collections import deque
 
 #Reading line arguments
 parser = argparse.ArgumentParser(description='Implements various search through a given maze')
@@ -18,33 +23,6 @@ if args.method:
 #Move in one of four directions (One function)
 
 #Need State representation, transition model, and goal test.
-
-#TODO: Actual search algorithm definition
-#Cases for different search algorithms, abd runs the selected algorithm
-def desiredSearch(x):
-    if(search == "breadth"):
-        bfs()
-    elif(search == "greedy"):
-        greedy()
-    elif(search == "astar"):
-        astar()
-    else:
-        dfs()
-
-def dfs():
-    print ("Depth first search")
-
-def bfs():
-    print ("Breadth first search")
-
-def greedy():
-    print ("Greedy Search")
-
-def astar():
-    print("Astar* Search")
-
-def main():
-    desiredSearch(search)
 
 class Problem(object):
     """The abstract class for a formal problem. A new domain subclasses this,
@@ -103,6 +81,60 @@ def path_states(node):
         return []
     return path_states(node.parent) + [node.state]
 
+FIFOQueue = deque
+
+LIFOQueue = list
+
+class PriorityQueue:
+    """A queue in which the item with minimum f(item) is always popped first."""
+
+    def __init__(self, items=(), key=lambda x: x): 
+        self.key = key
+        self.items = [] # a heap of (score, item) pairs
+        for item in items:
+            self.add(item)
+         
+    def add(self, item):
+        """Add item to the queuez."""
+        pair = (self.key(item), item)
+        heapq.heappush(self.items, pair)
+
+    def pop(self):
+        """Pop and return the item with min f(item) value."""
+        return heapq.heappop(self.items)[1]
+    
+    def top(self): return self.items[0][1]
+
+    def __len__(self): return len(self.items)
+
+#Reads the supplied txt file and returns a list of obstacles in the grid
+def retrieveObstacles():
+    result = []
+
+    with open(args.mazeFile) as fileobj:
+        for line in fileobj:
+            result.append(line) 
+ 
+    newResult = [x[:-1] for x in result]
+    newResult[len(newResult) - 1] = newResult[len(newResult) - 1] + "%"
+
+    i = 0
+    j = 0
+
+    obstacles = []
+
+    for row in newResult:
+        for col in row:
+            if(col == "%"):
+                obstacles.append((i, j))
+            j = j + 1
+        i = i + 1
+        j = 0
+
+    return obstacles
+
+    
+
 class GridProblem(Problem):
     """Finding a path on a 2D grid with obstacles. Obstacles are (x, y) cells."""
 
@@ -127,6 +159,68 @@ class GridProblem(Problem):
         x, y = state
         return {(x + dx, y + dy) for (dx, dy) in self.directions} - self.obstacles
 
+
+#TODO: Actual search algorithm definition
+#Cases for different search algorithms, abd runs the selected algorithm
+def desiredSearch(x):
+    if(search == "breadth"):
+        bfs()
+    elif(search == "greedy"):
+        greedy()
+    elif(search == "astar"):
+        astar()
+    else:
+        dfs()
+
+def depth_first_graph_search(problem):
+    """
+    Search the deepest nodes in the search tree first.
+    Search through the successors of a problem to find a goal.
+    The argument frontier should be an empty queue.
+    Does not get trapped by loops.
+    If two paths reach a state, only use the first one.
+    """
+    frontier = [(Node(problem.initial))]  # Stack
+
+    explored = set()
+    while frontier:
+        node = frontier.pop()
+        if problem.goal_test(node.state):
+            return node
+        explored.add(node.state)
+        frontier.extend(child for child in node.expand(problem)
+                        if child.state not in explored and child not in frontier)
+    return None
+
+def breadth_first_search(problem):
+    "Search shallowest nodes in the search tree first."
+    node = Node(problem.initial)
+    if problem.is_goal(problem.initial):
+        return node
+    frontier = FIFOQueue([node])
+    reached = {problem.initial}
+    while frontier:
+        node = frontier.pop()
+        for child in expand(problem, node):
+            s = child.state
+            if problem.is_goal(s):
+                return child
+            if s not in reached:
+                reached.add(s)
+                frontier.appendleft(child)
+    return failure
+
+def greedy():
+    print ("Greedy Search")
+
+def astar():
+    print("Astar* Search")
+
+def main():
+    """TODO: Implements the desired search
+    desiredSearch(search)
+    """
+    print(retrieveObstacles())
 if __name__ == "__main__":
     main()
 
