@@ -1,3 +1,12 @@
+"""TODO:Need State representation, transition model, and goal test.
+        Find the shortest path given an initial start state and one goal state.
+        Start state is P & Goal state is .
+
+        Pretty much implement the missing code in Problem and GridProblem,
+        as well as implementing greedy and A*. Everything else should be good.
+        Uncomment main() when ready to test.
+"""
+
 #Start search Solution here with imports
 import argparse
 import bisect
@@ -5,6 +14,7 @@ import math
 import random
 import sys
 from collections import deque
+from queue import PriorityQueue
 
 #Reading line arguments
 parser = argparse.ArgumentParser(description='Implements various search through a given maze')
@@ -17,147 +27,105 @@ search = "depth"
 if args.method:
     search = args.method
 
-#Find the shortest path given an initial start state and one goal state.
-#Start state is P & Goal state is .
+global start
+global end
 
-#Move in one of four directions (One function)
+#Node class
+class Node(object):
+    def __init__(self, position):
+        self.position = position
+        self.parent = None
+        self.children = []
 
-#Need State representation, transition model, and goal test.
+def Path(maze, node):
+    count = 0
+    while node.parent is not None:
+        testNode(maze, node)
+        node = node.parent
+        count += 1
+    return count
 
-class Problem(object):
-    """The abstract class for a formal problem. A new domain subclasses this,
-    overriding `actions` and `results`, and perhaps other methods.
-    The default heuristic is 0 and the default action cost is 1 for all states.
-    When yiou create an instance of a subclass, specify `initial`, and `goal` states 
-    (or give an `is_goal` method) and perhaps other keyword args for the subclass."""
+def testNode(maze, node):
+    if maze[node.position[0]][node.position[1]] == " ":
+        maze[node.position[0]][node.position[1]] = "+"
+    elif maze[node.position[0]][node.position[1]] == ".":
+        maze[node.position[0]][node.position[1]] = "E"
+    elif maze[node.position[0]][node.position[1]] == "P":
+        maze[node.position[0]][node.position[1]] = "S"
 
-    def __init__(self, initial=None, goal=None, **kwds): 
-        self.__dict__.update(initial=initial, goal=goal, **kwds) 
-        
-    def actions(self, state):        raise NotImplementedError
-    def result(self, state, action): raise NotImplementedError
-    def is_goal(self, state):        return state == self.goal
-    def action_cost(self, s, a, s1): return 1
-    def h(self, node):               return 0
-    
-    def __str__(self):
-        return '{}({!r}, {!r})'.format(
-            type(self).__name__, self.initial, self.goal)
-    
+def addChild(nodeA, nodeB):
+    nodeA.children.append(nodeB)
+    nodeB.children.append(nodeA)
 
-class Node:
-    "A Node in a search tree."
-    def __init__(self, state, parent=None, action=None, path_cost=0):
-        self.__dict__.update(state=state, parent=parent, action=action, path_cost=path_cost)
+def readMaze(mazeFile):
+    maze = list()
+    with open(mazeFile) as file:
+        for line in file:
+            maze.append(list(line.rstrip()))
+    return maze
 
-    def __repr__(self): return '<{}>'.format(self.state)
-    def __len__(self): return 0 if self.parent is None else (1 + len(self.parent))
-    def __lt__(self, other): return self.path_cost < other.path_cost
-    
-    
-failure = Node('failure', path_cost=math.inf) # Indicates an algorithm couldn't find a solution.
-cutoff  = Node('cutoff',  path_cost=math.inf) # Indicates iterative deepening search was cut off.
-    
-    
-def expand(problem, node):
-    "Expand a node, generating the children nodes."
-    s = node.state
-    for action in problem.actions(s):
-        s1 = problem.result(s, action)
-        cost = node.path_cost + problem.action_cost(s, action, s1)
-        yield Node(s1, node, action, cost)
-        
+def createNodes(maze):
+    prevNode = Node(-1)
+    currentNode = Node(-1)
+    topNode = [Node(-1)]*len(maze[0])
+    for i in range(len(maze)):
+        prevNode = Node(-1)
+        for j in range(len(maze[0])):
+            if maze[i][j] == "%":
+                prevNode = Node(-1)
+                topNode[j] = Node(-1)
+            else:
+                currentNode = Node((i, j))
+            if prevNode.position is not -1:
+                addChild(currentNode, prevNode)
+                prevNode = currentNode
+            if topNode[j].position is not -1:
+                addChild(currentNode, topNode[j])
+                topNode[j] = currentNode
+            if maze[currentNode.position[0]][currentNode.position[1]] == "P":
+                global start
+                start = currentNode
+                testNode(maze, start)
+            if maze[currentNode.position[0]][currentNode.position[1]] == "."\
+            or maze[currentNode.position[0]][currentNode.position[1]] == "E":
+                global end
+                end = currentNode
 
-def path_actions(node):
-    "The sequence of actions to get to this node."
-    if node.parent is None:
-        return []  
-    return path_actions(node.parent) + [node.action]
+def readMaze(mazeFile):
+    maze = list()
+    # open mazeFile in read mode, close it after
+    with open(mazeFile) as file:
+        # add each line character by character into maze list
+        for line in file:
+            maze.append(list(line.rstrip()))
+    return maze
+
+# Prints given maze file
+def printMaze(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            print(maze[i][j], end="")
+        print()
 
 
-def path_states(node):
-    "The sequence of states to get to this node."
-    if node in (cutoff, failure, None): 
-        return []
-    return path_states(node.parent) + [node.state]
+# Returns the starting position of the maze
+# start position denoted as "P"
+def findStart(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if maze[i][j] == "P":
+                return tuple([i, j])
+    return None
 
-FIFOQueue = deque
 
-LIFOQueue = list
-
-class PriorityQueue:
-    """A queue in which the item with minimum f(item) is always popped first."""
-
-    def __init__(self, items=(), key=lambda x: x): 
-        self.key = key
-        self.items = [] # a heap of (score, item) pairs
-        for item in items:
-            self.add(item)
-         
-    def add(self, item):
-        """Add item to the queuez."""
-        pair = (self.key(item), item)
-        heapq.heappush(self.items, pair)
-
-    def pop(self):
-        """Pop and return the item with min f(item) value."""
-        return heapq.heappop(self.items)[1]
-    
-    def top(self): return self.items[0][1]
-
-    def __len__(self): return len(self.items)
-
-#Reads the supplied txt file and returns a list of obstacles in the grid
-def retrieveObstacles():
-    result = []
-
-    with open(args.mazeFile) as fileobj:
-        for line in fileobj:
-            result.append(line) 
- 
-    newResult = [x[:-1] for x in result]
-    newResult[len(newResult) - 1] = newResult[len(newResult) - 1] + "%"
-
-    i = 0
-    j = 0
-
-    obstacles = []
-
-    for row in newResult:
-        for col in row:
-            if(col == "%"):
-                obstacles.append((i, j))
-            j = j + 1
-        i = i + 1
-        j = 0
-
-    return obstacles
-
-    
-
-class GridProblem(Problem):
-    """Finding a path on a 2D grid with obstacles. Obstacles are (x, y) cells."""
-
-    def __init__(self, initial=(15, 30), goal=(130, 30), obstacles=(), **kwds):
-        Problem.__init__(self, initial=initial, goal=goal, 
-                         obstacles=set(obstacles) - {initial, goal}, **kwds)
-
-    directions = [          (0, -1), 
-                  (-1, 0),           (1,  0),
-                            (0, +1)]
-    
-    def action_cost(self, s, action, s1): return straight_line_distance(s, s1)
-    
-    def h(self, node): return straight_line_distance(node.state, self.goal)
-                  
-    def result(self, state, action): 
-        "Both states and actions are represented by (x, y) pairs."
-        return action if action not in self.obstacles else state
-    
-    def actions(self, state):
-        """You can move one cell in any of `directions` to a non-obstacle cell."""
-        x, y = state
-        return {(x + dx, y + dy) for (dx, dy) in self.directions} - self.obstacles
+# Returns the end position of the maze
+# end position denoted as "."
+def findEnd(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if maze[i][j] == ".":
+                return tuple([i, j])
+    return None
 
 
 #TODO: Actual search algorithm definition
@@ -172,44 +140,65 @@ def desiredSearch(x):
     else:
         dfs()
 
-def depth_first_graph_search(problem):
-    """
-    Search the deepest nodes in the search tree first.
-    Search through the successors of a problem to find a goal.
-    The argument frontier should be an empty queue.
-    Does not get trapped by loops.
-    If two paths reach a state, only use the first one.
-    """
-    frontier = [(Node(problem.initial))]  # Stack
+# uses breadth first search algorithm to navigate maze
+# with a queue
+def bfs(maze, node):
+    count = 0
+    queue = [node]
 
-    explored = set()
-    while frontier:
-        node = frontier.pop()
-        if problem.goal_test(node.state):
-            return node
-        explored.add(node.state)
-        frontier.extend(child for child in node.expand(problem)
-                        if child.state not in explored and child not in frontier)
-    return None
+    visited = set()
 
-def breadth_first_search(problem):
-    "Search shallowest nodes in the search tree first."
-    node = Node(problem.initial)
-    if problem.is_goal(problem.initial):
-        return node
-    frontier = FIFOQueue([node])
-    reached = {problem.initial}
-    while frontier:
-        node = frontier.pop()
-        for child in expand(problem, node):
-            s = child.state
-            if problem.is_goal(s):
-                return child
-            if s not in reached:
-                reached.add(s)
-                frontier.appendleft(child)
-    return failure
+    while queue:
+        node = queue.pop(0)
+        visited.add(node)
+        count += 1
 
+        if maze[node.position[0]][node.position[1]] == "." or \
+                maze[node.position[0]][node.position[1]] == "E":
+            break
+        else:
+
+            for child in range(len(node.children)):
+                if node.children[child] not in visited and node.children[child].parent is None:
+                    node.children[child].parent = node
+                    queue.append(node.children[child])
+
+    return count
+
+
+# uses depth first search algorithm to navigate maze
+# with a stack
+def dfs(maze, node):
+    count = 0
+
+    stack = [node]
+    visited = set()
+
+    while stack:
+        node = stack.pop()
+        visited.add(node)
+        count += 1
+
+        if maze[node.position[0]][node.position[1]] == "." or \
+                maze[node.position[0]][node.position[1]] == "E":
+            break
+        if node in visited:
+
+            for child in range(len(node.children)):
+                if node.children[child] not in visited and node.children[child].parent is None:
+                    node.children[child].parent = node
+                    stack.append(node.children[child])
+    return count
+
+maze = args.mazeFile
+maze = readMaze(maze)
+
+
+path = Node.Path(maze, end)
+printMaze(maze)
+print("Path Cost: " + str(path))
+
+#TODO: Greedy and Astar*
 def greedy():
     print ("Greedy Search")
 
@@ -217,10 +206,8 @@ def astar():
     print("Astar* Search")
 
 def main():
-    """TODO: Implements the desired search
     desiredSearch(search)
-    """
-    print(retrieveObstacles())
+    
 if __name__ == "__main__":
     main()
 
