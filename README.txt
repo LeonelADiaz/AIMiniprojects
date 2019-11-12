@@ -1,58 +1,74 @@
-Mini-Project 1: Search
+Mini-Project 2: MDP
 
-In this mini-project, your task is to implement general-purpose search algorithms and use them in solving maze
- problems. More concretely, you will program an agent to find a path through the maze and reach the exit.
+ 
 
-Your program should run using Python 3.7. Your code can only import extra modules, but only if they are part
- of the standard python library.
+For this mini-project, you are going to implement a simple simulation of robot path planning, called a grid world, and use value iteration to come up with policies to get the robot to navigate a maze. You are given two files (mdp.pyPreview the document and utils2.pyPreview the document) with an initial implementation that you need to understand and extend.
 
-Your program will solve the problem of finding the shortest path given an initial start state and one goal
- state. The maze layout will be provided as a simple text file, in which '%' means obstacles, 'P' is the 
- starting position, and '.' represents the goal . See the sample mazes files for an illustration.
+ 
 
-Maze1.txtPreview the document
+Questions about the code (30 points)
+a) Run the code by executing python3 mdp.py. I ran this on Ubuntu 16.04 using Python 3.5. Show a snapshot of the code running.
 
-Maze2.txtPreview the document
+b) Explain the relationship between the class MDP and the class GridMDP in mdp.py
 
-Maze3.txtPreview the document
+c) Explain the following python functions from the sample code:
 
+ 
 
-The agent can move in one of four directions North, West, South, East.
+-vector_add
 
-You should implement the state representation, transition model, and goal test necessary to solve the problem.
-Then implement the following search algorithms that were covered in class and are in the textbook:
+-turn_right
 
--Depth-first search
--Breadth-first search
--Greedy best-first search
--A* search
+-turn_left
 
-For this part of the assignment, you will use the Manhattan distance from the current position to 
-the goal as the heuristic function for greedy and A* search.
+ 
 
-For each maze, your report should include a solution output (this can be shown in the command line), 
-the solution cost, and the number of nodes expanded in your search.
+-value_iteration
 
-You will submit this mini-project through canvas. You will upload only two files:
+-best_policy
 
--search.py - the python file with your solution
--report.pdf - a project report on your implementation
+-expected_utility
+
+d) What happens with the found policy if the reward for the entries that have -0.04 are changed to -1, -0.3, or -0.02? Explain this.
+
+ 
+
+2)  Extending the code (65 points)
+
+Now, you will extend the sample code to accept other mazes of up to 15x15 squares.
+
+Your program will find a policy for the robot such as the one presented in Figure 17.2. The maze layout will be provided as a simple text file, in which '%' means obstacles, 'P' is a location with a positive reward of +1 position, and 'N' means a negative reward -1. There will be one ‘N’ and one ‘P’ in the file. See the sample mazePreview the document file for an illustration. All the other locations besides obstacles, negative reward location, and positive reward location will have reward -0.04.
+
+In each grid square, you can take one of four actions, North, South, East, or West, which moves you with 0.75 probability to the intended square and with probability 0.125 to both right angles of the intended location. See figure 17.1 in the book for an illustration. 
+
+Using the value iteration (Section 17.2) algorithm (you can modify as you need the implementation provided in mdp.py and util2.py), find an optimal policy for the agent.
+
+Your program should run using Python 3.7. Your code can only import extra modules, but only if they are part of the standard python library. You can also use the provided code, please attach all the files needed to run your program. 
+
+ 
 
 Your program should run as follows:
 
-python3 search.py --method astar maze.txt
+ 
 
-Where astar is the name of the method, which can be one of depth, breadth, greedy, or astar, and maze.txt is
-the input file. We will supply three mazes as shown above that you can use to test your program, 
-but we will test other mazes.
+python3 mdp.py maze.txt
 
-You should include in your report the name of the team members (you can work in pairs). Please
-describe the algorithms and data structures used that you used for the implementation of
-all four search strategies. Answer the following questions on your report:
+ 
 
- what is a state? 
- What is a node? 
- Are they the same or different in your implementations?
- What is the frontier?
- Do you maintain an explored states list?
- How are repeated states detected and managed?
+For each maze, your program should include the obtained policy (this can be shown in the command line). 
+
+ 
+
+You will submit this mini-project through canvas. You will upload these files:
+
+ 
+
+-the python files with your solution
+
+-report.pdf - a project report on your implementation
+
+ 
+
+You should include in your report the name of the team members (you can work in pairs).
+
+Please describe the algorithms and data structures that you used for the implementation of value iteration. Show the run of 3 different mazes created by you. Answer the following questions on your report: How did you implement the transition function?  How did you implement the reward function? How did you implemented the Bellman update equation (17.6) in the book. How close is your implementation to the pseudo-code in figure 17.4?
