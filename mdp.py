@@ -4,7 +4,7 @@
 Originally Found in http://aima.cs.berkeley.edu/python/
 Modify on 11/08/2019 by Leonardo Bobadilla for the FIU AI Homework
 
-Markov Decision Processes 
+Markov Decision Processes
 
 First we define an MDP, and the special case of a GridMDP, in which
 states are laid out in a 2-dimensional grid.  We also represent a policy
@@ -65,9 +65,9 @@ class GridMDP(MDP):
         if action == None:
             return [(0.0, state)]
         else:
-            return [(0.8, self.go(state, action)),
-                    (0.1, self.go(state, turn_right(action))),
-                    (0.1, self.go(state, turn_left(action)))]
+            return [(0.75, self.go(state, action)),
+                    (0.125, self.go(state, turn_right(action))),
+                    (0.125, self.go(state, turn_left(action)))]
 
     def go(self, state, direction):
         "Return the state that results from going in this direction."
@@ -120,10 +120,32 @@ def expected_utility(a, s, U, mdp):
 
 
 #demo
-m = Fig
-print(m)
-pi = best_policy(m, value_iteration(m, .01))
-print(pi)
-print(m.to_arrows(pi))
-print(value_iteration(m, .01))
+mazeName = getFile()
+maze = readMaze(mazeName)
+
+#For some reason my nested if's weren't working so I had to do one separate for each
+convertPercentToNone(maze)
+convertSpacesToDefault(maze)
+convertPToOne(maze)
+convertNToNotOne(maze)
+
+#Finds terminals
+pTerminal = findP(maze)
+nTerminal = findN(maze)
+
+Fig2= GridMDP(maze, terminals=[pTerminal, nTerminal])
+
+m2 = Fig2
+print(m2)
+pi2 = best_policy(m2, value_iteration(m2, .01))
+print(pi2)
+print(m2.to_arrows(pi2))
+print(value_iteration(m2, .01))
+
+#m = Fig
+#print(m)
+#pi = best_policy(m, value_iteration(m, .01))
+#print(pi)
+#print(m.to_arrows(pi))
+#print(value_iteration(m, .01))
 

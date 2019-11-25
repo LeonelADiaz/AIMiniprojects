@@ -2,7 +2,7 @@
 Originally Found in http://aima.cs.berkeley.edu/python/
 Modify on 11/08/2019 by Leonardo Bobadilla for the FIU AI Homework
 """
-import operator, math
+import operator, math, argparse
 orientations = [(1,0), (0, 1), (-1, 0), (0, -1)]
 
 def turn_right(orientation):
@@ -10,6 +10,65 @@ def turn_right(orientation):
 
 def turn_left(orientation):
     return orientations[(orientations.index(orientation)+1) % len(orientations)]
+
+# Parse arguments for a file, and return the file.
+def getFile():
+    parser = argparse.ArgumentParser(description='Implements MDP to a given maze')
+    parser.add_argument('mazeFile', help='Maze file name')
+    args = parser.parse_args()
+    mazeFile = args.mazeFile
+    return mazeFile
+
+# Reads given maze file
+def readMaze(mazeFile):
+    maze = list()
+    # open mazeFile in read mode, close it after
+    with open(mazeFile) as file:
+        # add each line character by character into maze list
+        for line in file:
+            maze.append(list(line.rstrip()))
+    return maze
+
+# Converts empty spaces to contain 'None'
+def convertPercentToNone(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if maze[i][j] == "%":
+                maze[i][j] = None
+
+def convertSpacesToDefault(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if maze[i][j] == " ":
+                maze[i][j] = -0.04
+
+def convertPToOne(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if maze[i][j] == "P":
+                maze[i][j] = +1
+def convertNToNotOne(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if maze[i][j] == "N":
+                maze[i][j] = -1
+
+
+
+# Finds terminals and their location
+def findP(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if maze[i][j] == "+1":
+                return tuple([i, j])
+    return None
+
+def findN(maze):
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if maze[i][j] == "-1":
+                return tuple([i, j])
+    return None
 
 
 def update(x, **entries):
